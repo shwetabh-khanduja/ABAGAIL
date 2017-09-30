@@ -67,5 +67,9 @@ public class SimulatedAnnealing extends OptimizationAlgorithm {
     public Instance getOptimal() {
         return cur;
     }
+    
+    public double currentTemp(){
+    	return t;
+    }
 
 }
