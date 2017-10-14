@@ -1,5 +1,6 @@
 package opt.example;
 
+import assignment2.MinValueCrossover;
 import dist.Distribution;
 
 import opt.ContinuousAddOneNeighbor;
@@ -11,6 +12,7 @@ import opt.ga.UniformCrossOver;
 import opt.ga.CrossoverFunction;
 import opt.ga.GeneticAlgorithmProblem;
 import opt.ga.MutationFunction;
+import opt.ga.SingleCrossOver;
 import shared.DataSet;
 import shared.ErrorMeasure;
 import shared.Instance;

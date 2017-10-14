@@ -23,7 +23,7 @@ public class DiscreteDependencyTree extends AbstractDistribution {
     /**
      * The dependency tree root
      */
-    private DiscreteDependencyTreeRootNode root;
+    public DiscreteDependencyTreeRootNode root;
     
     /**
      * The tree
