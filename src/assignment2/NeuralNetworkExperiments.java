@@ -93,7 +93,7 @@ public class NeuralNetworkExperiments {
 		if(parameters.AlgosToRun[1]) oa[1] = new SimulatedAnnealing(parameters.InitialTemp,parameters.CoolingRate,nnop[1]);
 		
 		if(parameters.AlgosToRun[2])
-			oa[2] = new StandardGeneticAlgorithm(parameters.PopulationSize, 
+			oa[2] = new StandardGeneticAlgorithmWithTournamentSelection(parameters.PopulationSize, 
 					(int)(parameters.PopulationSize * parameters.MatingFrac), 
 					(int)(parameters.PopulationSize * parameters.MutateFrac), 
 					nnop[2]);

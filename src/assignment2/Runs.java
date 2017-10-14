@@ -42,15 +42,26 @@ import shared.writer.CSVWriter;
 
 public class Runs {
 	public static void main(String[] args) throws Exception{
-		String rootPath = "C:/Users/shkhandu/OneDrive/Gatech/Courses/ML/Assignment2";
-		System.out.println(args[0]);
-		NeuralNetworkExperiments.Perform(rootPath,args[0],args[1]);
-		RunOnOptimizationProblems(rootPath);
+//		args : C:/Users/shkhandu/OneDrive/Gatech/Courses/ML/Assignment2 ropt nnet output_test_lr_10k-iters_30-hiddenlayers_all_1.csv 20,30,40,50,60,70,80,90,100
+		String rootPath = args[0];
+		System.out.println("rootpath: " + args[0]);
+		System.out.println(args[1] + " " + args[1].length());
+		if(args[1].equals("nnet")){
+			NeuralNetworkExperiments.Perform(rootPath,args[2],args[3]);
+		}
+		else if(args[1].equals("ropt")){
+			int runs = Integer.parseInt(args[2]);
+			System.out.println("Randomised optimizations with total runs : " + runs);
+			RunOnOptimizationProblems(rootPath, runs);	
+		}
 	}
 	
-	public static void RunOnOptimizationProblems(String rootPath) throws IOException{
+	public static void RunOnOptimizationProblems(String rootPath, int runs) throws IOException{
 
-		int[] seeds = new int[]{0,1,2,3,4};
+		int[] seeds = new int[runs];
+		for(int i=0; i< runs; i++){
+			seeds[i] = i;
+		}
 		
 		boolean[] computeForAlgos = new boolean[]{true,true,true,true};
 		for (int seed : seeds) {
