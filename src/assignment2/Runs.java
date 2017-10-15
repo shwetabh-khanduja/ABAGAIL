@@ -47,16 +47,40 @@ public class Runs {
 		System.out.println("rootpath: " + args[0]);
 		System.out.println(args[1] + " " + args[1].length());
 		if(args[1].equals("nnet")){
-			NeuralNetworkExperiments.Perform(rootPath,args[2],args[3]);
+			NeuralNetworkExperiments.Perform(rootPath,"nnet.output.csv","20,30,40,50,60,70,80,90,100");
 		}
 		else if(args[1].equals("ropt")){
 			int runs = Integer.parseInt(args[2]);
 			System.out.println("Randomised optimizations with total runs : " + runs);
-			RunOnOptimizationProblems(rootPath, runs);	
+			RunOnOptimizationProblems(rootPath, runs, args[3]);	
+			if(args[3].contains("knapsack")){
+				GenerateTemperatureCurvesForSa(rootPath, runs, new String[]{"0","90","95","99"});
+			}
 		}
 	}
 	
-	public static void RunOnOptimizationProblems(String rootPath, int runs) throws IOException{
+	public static void GenerateTemperatureCurvesForSa(String rootPath, int runs, String[] temps) throws IOException{
+		for(int j = 0; j < temps.length; j++){
+			double temp = Double.parseDouble(temps[j]) / 100;
+			int[] seeds = new int[runs];
+			for(int i=0; i< runs; i++){
+				seeds[i] = i;
+			}
+			
+			boolean[] computeForAlgos = new boolean[]{false,true,false,false};
+			for (int seed : seeds) {
+				Function<Object[],StatsLogger[]> f;
+				
+				System.out.println("knapsack_"+temp);
+				String knapsackOutputPath = rootPath + "/knapsack_"+temps[j]+"/" + seed;
+				CreateDirectoryIfNotExists(knapsackOutputPath);
+				f = a -> GetResultsForKnapSackProblemWithSize((int)a[0], (int)a[1], (HashMap<String,Long[]>)a[2], (boolean[])a[3], temp);
+				GetResults(knapsackOutputPath, seed, new int[]{30,50,70,100,130}, f, computeForAlgos);
+			}
+		}
+	}
+	
+	public static void RunOnOptimizationProblems(String rootPath, int runs, String problemsToRun) throws IOException{
 
 		int[] seeds = new int[runs];
 		for(int i=0; i< runs; i++){
@@ -67,23 +91,29 @@ public class Runs {
 		for (int seed : seeds) {
 			Function<Object[],StatsLogger[]> f;
 			
-			System.out.println("knapsack");
-			String knapsackOutputPath = rootPath + "/knapsack/" + seed;
-			CreateDirectoryIfNotExists(knapsackOutputPath);
-			f = a -> GetResultsForKnapSackProblemWithSize((int)a[0], (int)a[1], (HashMap<String,Long[]>)a[2], (boolean[])a[3]);
-			GetResults(knapsackOutputPath, seed, new int[]{30,50,70,100,130}, f, computeForAlgos);
-
-			System.out.println("TwoColors");
-			String twoColorsOutputPath = rootPath + "/twocolors/" + seed;
-			CreateDirectoryIfNotExists(twoColorsOutputPath);
-			f = a -> GetResultsForTwoColorsProblemWithSize((int)a[0], (int)a[1], (HashMap<String,Long[]>)a[2], (boolean[])a[3]);
-			GetResults(twoColorsOutputPath, seed, new int[]{20,50,80,100,120}, f, computeForAlgos);
+			if(problemsToRun.contains("knapsack")){
+				System.out.println("knapsack");
+				String knapsackOutputPath = rootPath + "/knapsack/" + seed;
+				CreateDirectoryIfNotExists(knapsackOutputPath);
+				f = a -> GetResultsForKnapSackProblemWithSize((int)a[0], (int)a[1], (HashMap<String,Long[]>)a[2], (boolean[])a[3], 0.99);
+				GetResults(knapsackOutputPath, seed, new int[]{30,50,70,100,130}, f, computeForAlgos);
+			}
 			
-			System.out.println("countones");
-			String countOnesPath = rootPath + "/countones/" + seed;
-			CreateDirectoryIfNotExists(countOnesPath);
-			f = a -> GetResultsForCountOnesProblemWithSize((int)a[0], (int)a[1], (HashMap<String,Long[]>)a[2], (boolean[])a[3]);
-			GetResults(countOnesPath, seed, new int[]{30,40,50,60,70}, f, computeForAlgos);
+			if(problemsToRun.contains("twocolors")){
+				System.out.println("TwoColors");
+				String twoColorsOutputPath = rootPath + "/twocolors/" + seed;
+				CreateDirectoryIfNotExists(twoColorsOutputPath);
+				f = a -> GetResultsForTwoColorsProblemWithSize((int)a[0], (int)a[1], (HashMap<String,Long[]>)a[2], (boolean[])a[3]);
+				GetResults(twoColorsOutputPath, seed, new int[]{20,50,80,100,120}, f, computeForAlgos);
+			}
+			
+			if(problemsToRun.contains("countones")){
+				System.out.println("countones");
+				String countOnesPath = rootPath + "/countones/" + seed;
+				CreateDirectoryIfNotExists(countOnesPath);
+				f = a -> GetResultsForCountOnesProblemWithSize((int)a[0], (int)a[1], (HashMap<String,Long[]>)a[2], (boolean[])a[3]);
+				GetResults(countOnesPath, seed, new int[]{30,40,50,60,70}, f, computeForAlgos);
+			}
 		}
 	}
 	
@@ -448,7 +478,7 @@ public class Runs {
 		return results;
 	}
 	
-	public static StatsLogger[] GetResultsForKnapSackProblemWithSize(int size, int seed, HashMap<String, Long[]> times, boolean[] AlgosToRun){
+	public static StatsLogger[] GetResultsForKnapSackProblemWithSize(int size, int seed, HashMap<String, Long[]> times, boolean[] AlgosToRun, double temp){
 		Random r = new Random(0);
 		StatsLogger[] results = new StatsLogger[4];
 		int N = size;
@@ -496,7 +526,7 @@ public class Runs {
 		}
 		
 		double initialTemp = 1e11;
-		double coolingRate = 0.99;
+		double coolingRate = temp;
 		SimulatedAnnealing sa = new SimulatedAnnealing(initialTemp, coolingRate, hcp);
 		SimulatedAnnealingStatsLogger logger = new SimulatedAnnealingStatsLogger(sa, loggingFreq);
 		ConvergenceTrainerWithStatsLogging ct = new ConvergenceTrainerWithStatsLogging(sa, convergenceErrTol, maxIters, logger, iterTol);
